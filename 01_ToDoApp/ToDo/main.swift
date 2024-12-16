@@ -11,9 +11,7 @@ struct Emojis {
     static let EXIST = "👋"
 }
 
-// * Create the `Todo` struct.
-// * Ensure it has properties: id (UUID), title (String), and isCompleted (Bool).
-struct Todo {
+struct Todo : Decodable {
     var id: UUID
     var title: String
     var isCompleted: Bool
@@ -31,26 +29,43 @@ extension Todo: CustomStringConvertible {
     }
 }
 
-// Create the `Cache` protocol that defines the following method signatures:
-//  `func save(todos: [Todo])`: Persists the given todos.
-//  `func load() -> [Todo]?`: Retrieves and returns the saved todos, or nil if none exist.
 protocol Cache {
     func save(todos: [Todo])
     func load() -> [Todo]?
 }
 
-// `FileSystemCache`: This implementation should utilize the file system
-// to persist and retrieve the list of todos.
-// Utilize Swift's `FileManager` to handle file operations.
 final class JSONFileManagerCache: Cache {
+    private var filePath: String
 
+    init(path: String? = nil) {
+        self.filePath = path ?? "\(NSTemporaryDirectory())todo.json"
+    }
+
+    func load() -> [Todo]? {
+        do {
+            var jsonData = NSData(contentsOfFile: self.filePath)
+            return JSONSerialization.jsonObject(with: jsonData)
+        } catch {
+            return nil
+        }
+
+    }    
 }
 
-// `InMemoryCache`: : Keeps todos in an array or similar structure during the session.
-// This won't retain todos across different app launches,
-// but serves as a quick in-session cache.
 final class InMemoryCache: Cache {
+    private var todos: [Todo]
 
+    init() {
+        self.todos = []
+    }
+
+    func save(todos: [Todo]) {
+        self.todos = todos;
+    }
+
+    func load() -> [Todo]? {
+        return self.todos
+    }
 }
 
 // The `TodosManager` class should have:
@@ -76,5 +91,7 @@ final class App {
 
 // TODO: Write code to set up and run the app.
 func main() {
-    
+    print(NSTemporaryDirectory())
 }
+
+main()
